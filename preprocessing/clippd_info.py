@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from utils import read_excel
 
 def get_clipped_info(arcos_data, data_mapping_dict_file):

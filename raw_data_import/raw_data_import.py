@@ -1,5 +1,5 @@
 import json
-
+import pandas as pd
 
 
 # TODO get unit tests for that
@@ -7,7 +7,7 @@ def get_key_list(data, list_items_to_remove):
    """Get key list from round data without the 'shot' key"""
    item = data[0]
    key_list = list(item['holes'][0].keys())
-   key_list = [e for e in t if e not in list_items_to_remove]
+   key_list = [e for e in key_list if e not in list_items_to_remove]
    return key_list
 
 # TODO uses generator

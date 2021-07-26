@@ -1,3 +1,8 @@
+import pandas as pd
+import numpy as np
+from scipy.stats import zscore
+
+
 def get_shot_distance_coord_info(arcos_data):
    """add coordinate and shot distance to the dataframe"""
    # Calculate starting distance for each shot.

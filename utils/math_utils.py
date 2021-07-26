@@ -5,7 +5,6 @@ import math
 
 def get_bearing(start_coordinates, end_coordinates):
    """Get bearing between two points"""
-   # Bearing being distance between to point in spherical coordinate
    lat1 = np.radians(start_coordinates[0])
    lon1 = np.radians(start_coordinates[1])
    lat2 = np.radians(end_coordinates[0])
@@ -21,13 +20,12 @@ def get_bearing(start_coordinates, end_coordinates):
 def calculate_start_end_pin_angle(shot_distance, shot_start_distance_yards, shot_end_distance_yards):
    """Calculate short/long distances"""
    if(shot_end_distance_yards > 0) & (shot_distance > 0):
-      phi = math.acos((shot_distance**2 + shot_end_distance_yards**2 - shot_start_distance_yards**2)
+      phi = math.acos((shot_distance**2 + shot_end_distance_yards**2 - shot_start_distance_yards**2) /
       (2 * shot_distance * shot_end_distance_yards))
    else:
       phi = 0
    return np.rad2deg(phi)
 
-# Function to calculate left/right distances.
 def calculate_miss_distance(miss_bearing_left_right, start_end_pin_angle, shot_end_distance_yards):
    """Calculate left/right distances."""
    if miss_bearing_left_right > 180:

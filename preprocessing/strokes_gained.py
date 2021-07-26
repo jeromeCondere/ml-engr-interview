@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.interpolate import interp1d
 
 def get_expected_shots_info(pga_file, pga_putting_file):
     """Get expected shot info"""
