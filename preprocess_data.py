@@ -1,8 +1,15 @@
 
+#TODO: evaluate
 def sort_data(arccos_data):
    """Sort data using  by specific fields"""
    arccos_data.sort_values(by=['round_userId', 'round_startTime', 'roundId', 'hole_holeId', 'shot_shotId'], inplace=True)
    return arccos_data
+
+def last_sort(arcos_data):
+   # Add Clippd dataframe to data
+   ## Sort.
+   arccos_data.sort_values(by=['player_id', 'round_time', 'round_id', 'hole_id', 'shot_id'], inplace=True)
+ 
 
 
 
@@ -11,76 +18,16 @@ def fill_na(arcos_data):
    arccos_data['shot_endTerrain'] = arccos_data['shot_endTerrain'].fillna('Green')
    return arccos_data
 
-def get_shot_distance_coord_info(arcos_data):
-   """add coordinate and shot distance to the dataframe"""
-   # Calculate starting distance for each shot.
-   arccos_data['start_coordinates'] = list(zip(arccos_data['shot_startLat'],
-                                               arccos_data['shot_startLong']))
-   arccos_data['pin_coordinates'] = list(zip(arccos_data['hole_pinLat'],
-                                             arccos_data['hole_pinLong']))
-   arccos_data['shot_start_distance_yards'] = arccos_data.apply(
-       lambda row: distance.distance(row['start_coordinates'], row['pin_coordinates']).ft / 3, axis=1
-   )
-   arccos_data['shot_endLat'].fillna(arccos_data['hole_pinLat'], inplace=True)
-   arccos_data['shot_endLong'].fillna(arccos_data['hole_pinLong'], inplace=True)
-   arccos_data['end_coordinates'] = list(zip(arccos_data['shot_endLat'], arccos_data['shot_endLong']))
-
-   # Calculate shot distance in yards using start and end coordinates.
-   arccos_data['shot_distance_yards_calculated'] = arccos_data.apply(
-    lambda row: distance.distance(row['start_coordinates'], row['end_coordinates']).ft / 3, axis=1
-   )
-
-   # Calculate end distance for each shot.
-   arccos_data['shot_end_distance_yards'] = arccos_data.apply(
-    lambda row: distance.distance(row['end_coordinates'], row['pin_coordinates']).ft / 3, axis=1
-   )
-   arccos_data['shot_end_distance_yards'].fillna(0, inplace=True)
-
-   # Take hole length as the distance to CG for first shot.
-   arccos_data['hole_yards'] = np.where(arccos_data['shot_shotId'] == 1,
-                                     arccos_data['shot_startDistanceToCG'],
-                                     np.nan)
-   arccos_data['hole_yards'].ffill(inplace=True)
-   arccos_data['hole_yards'] = pd.to_numeric(arccos_data['hole_yards'])
-
+def mapping(arccos_data, data_mapping_dict_file):
+   data_dictionary = pd.read_excel(data_mapping_dict_file)
+   arccos_data_dictionary = data_dictionary[['Clippd', 'Arccos']]
+   arccos_data_dictionary = arccos_data_dictionary.dropna().set_index('Arccos').to_dict()['Clippd']
+   filtered_columns = list(arccos_data_dictionary.keys())
+   filtered_columns.remove("'arccos'")
+   arccos_data = arccos_data[filtered_columns].copy()
+   arccos_data.columns = arccos_data.columns.to_series().map(arccos_data_dictionary)  # TODO: fix
+   arccos_data['data_source'] = 'arccos'
    return arccos_data
-
-
-def get_shot_type_info(arccos_data):
-   """add shot info to the dataframe"""
-   # Impute shot type.
-   conditions_shot_type = [(arccos_data['shot_startTerrain'] == 'Tee') & (arccos_data['hole_par'] != 3),
-   (arccos_data['shot_start_distance_yards'] <= 30) & (arccos_data['shot_startTerrain'] != 'Green'),
-   (arccos_data['shot_startTerrain'] == 'Green')]
-   values = ['TeeShot', 'GreensideShot', 'Putt']
-   arccos_data['shot_type'] = np.select(conditions_shot_type, values, default='ApproachShot')
-
-   # Calculate z-scores for shot distance and start distance and by club and shot type.
-   arccos_data['shot_distance_yards_zscore'] = (arccos_data.groupby(['round_userId', 'shot_type', 'shot_clubType'])
-   ['shot_distance_yards_calculated']
-   .transform(lambda x: zscore(x, ddof=1)))
-   .fillna(0)
-
-   arccos_data['shot_start_distance_yards_zscore'] = (arccos_data.groupby(['round_userId', 'shot_type', 'shot_clubType'])
-   ['shot_start_distance_yards']
-   .transform(lambda x: zscore(x, ddof=1)))
-   .fillna(0)
-
-   # Impute shot subtype.
-   conditions = [arccos_data['shot_type'] == 'TeeShot',
-   (arccos_data['shot_type'] == 'ApproachShot') &
-   (arccos_data['shot_distance_yards_zscore'] <= -1) &
-   (arccos_data['shot_end_distance_yards'] > 30) &
-   (arccos_data['shot_endTerrain'] != 'Fairway'),
-   (arccos_data['shot_type'] == 'ApproachShot') &
-   (arccos_data['shot_distance_yards_zscore'] > -1) &
-   (arccos_data['shot_start_distance_yards_zscore'] > 1) &
-   (arccos_data['shot_end_distance_yards'] > 30),
-   arccos_data['shot_type'] == 'GreensideShot',
-   arccos_data['shot_type'] == 'Putt']
-
-   values = ['TeeShot', 'Recovery', 'LayUp', 'GreensideShot', 'Putt']
-   arccos_data['shot_subtype'] = np.select(conditions, values, default='GoingForGreen')
 
 
 
@@ -96,4 +43,24 @@ def process_fields(arccos_data):
    arccos_data = get_distance_coord(arcos_data)
 
 
+
+
+def get_clipped_info(arcos_data, data_mapping_dict_file):
+   """add clippd info to the dataframe"""
+   data_dictionary = pd.read_excel(data_mapping_dict_file)
+   clippd_data = pd.DataFrame(columns=data_dictionary['Clippd'].values)
+   
+     
+   # Concatenate data sources.
+   arccos_data = pd.concat([clippd_data, arccos_data])  # TODO: fix, empty df, add column if exists
+   # Tidy datetime features and add round_date.
+   datetime_features = ['round_time', 'shot_time']
+   arccos_data[datetime_features] = arccos_data[datetime_features].apply(lambda x: x.replace(tzinfo=pytz.UTC))
+       
+   arccos_data['round_date'] = pd.to_datetime(arccos_data['round_time']).dt.date
+   # Convert data_source to categorical variable and order dataframe.
+   arccos_data['data_source'] = pd.Categorical(arccos_data['data_source'], categories=['arccos', 'gsl', 'whs'], ordered=True)
+   arccos_data.sort_values(by=['data_source', 'player_id', 'round_time', 'round_id', 'hole_id'], inplace=True)
+   
+   return arcos_data
 
