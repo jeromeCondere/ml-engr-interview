@@ -28,7 +28,7 @@ def get_hole_info_df(round_data):
    return pd.concat(appended_data)
 
 
-def get_hole_round_info(round_data, course_data):
+def get_hole_round_merged_info(round_data, course_data):
    """merge hole and round info into a single dataframe"""
    # Convert round info to dataframe.
    arccos_hole_info = get_hole_info_df(round_data)
@@ -68,10 +68,10 @@ def get_hole_round_info(round_data, course_data):
    return merged_info
 
 
-def get_shot_df(shot_data):
+def get_shot_info_df(shot_data):
    appended_data = []
    for item in terrain_data:
-      key_list = get_key_list(shot_data)
+      key_list = get_key_list(shot_data, ['drive', 'approach', 'chip', 'sand'])
       drive_data = pd.json_normalize(item['holes'], 'drive', key_list, record_prefix='shot_', meta_prefix='hole_')
       approach_data = pd.json_normalize(item['holes'], 'approach', key_list, record_prefix='shot_', meta_prefix='hole_')
       chip_data = pd.json_normalize(item['holes'], 'chip', key_list, record_prefix='shot_', meta_prefix='hole_')
@@ -82,3 +82,14 @@ def get_shot_df(shot_data):
     
    return pd.concat(appended_data)
 
+def get_merged_info(round_data, course_data, shot_data, terrain_data):
+   """get dataframe with all info merged"""
+   arccos_hole_info = get_hole_round_merged_info(round_data, course_data)
+   merged_info = arccos_hole_info.merge(
+    arccos_hole_info_terrain[['roundId', 'hole_holeId', 'shot_shotId',
+                              'hole_par', 'shot_startDistanceToCG',
+                              'shot_startTerrain', 'shot_endTerrain']],
+    how='left',
+    left_on=['roundId', 'hole_holeId', 'shot_shotId'],
+    right_on=['roundId', 'hole_holeId', 'shot_shotId'])
+   return merged_info
