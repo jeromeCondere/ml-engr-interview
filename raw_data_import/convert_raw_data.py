@@ -1,11 +1,5 @@
 import json
 
-# TODO: check if file exists
-def read_json_file(file):
-   """Read Json file"""
-   with open(repr(file)) as f:
-      file_data = [json.load(f)]
-      return file_data
 
 
 # TODO get unit tests for that
@@ -68,7 +62,7 @@ def get_hole_round_merged_info(round_data, course_data):
    return merged_info
 
 
-def get_shot_info_df(shot_data):
+def get_shot_info_df(shot_data, terrain_data):
    appended_data = []
    for item in terrain_data:
       key_list = get_key_list(shot_data, ['drive', 'approach', 'chip', 'sand'])
@@ -82,9 +76,10 @@ def get_shot_info_df(shot_data):
     
    return pd.concat(appended_data)
 
-def get_merged_info(round_data, course_data, shot_data, terrain_data):
-   """get dataframe with all info merged"""
+def convert_raw_data(round_data, course_data, shot_data, terrain_data):
+   """Convert raw data"""
    arccos_hole_info = get_hole_round_merged_info(round_data, course_data)
+   arccos_hole_info_terrain = get_shot_info_df(shot_data, terrain_data)
    merged_info = arccos_hole_info.merge(
     arccos_hole_info_terrain[['roundId', 'hole_holeId', 'shot_shotId',
                               'hole_par', 'shot_startDistanceToCG',
@@ -92,4 +87,5 @@ def get_merged_info(round_data, course_data, shot_data, terrain_data):
     how='left',
     left_on=['roundId', 'hole_holeId', 'shot_shotId'],
     right_on=['roundId', 'hole_holeId', 'shot_shotId'])
-   return merged_info
+   return merged_info.copy()
+

@@ -10,8 +10,8 @@ def get_shot_miss_info(arccos_data):
    arccos_data['start_to_pin_bearing'] = arccos_data.apply(
        lambda row: get_bearing(row['start_coordinates'], row['pin_coordinates']), axis=1)
    arccos_data['miss_bearing_left_right'] = arccos_data['start_to_end_bearing'] - arccos_data['start_to_pin_bearing']
-   arccos_data['miss_bearing_left_right'] = np.where(arccos_data['miss_bearing_left_right']<0,
-                                                     arccos_data['miss_bearing_left_right']+360,
+   arccos_data['miss_bearing_left_right'] = np.where(arccos_data['miss_bearing_left_right'] < 0,
+                                                     arccos_data['miss_bearing_left_right'] + 360,
                                                      arccos_data['miss_bearing_left_right'])
    
    # Determine miss distances.

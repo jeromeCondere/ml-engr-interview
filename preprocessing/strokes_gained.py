@@ -1,4 +1,5 @@
-# Import PGA benchmark and define functions.
+import pandas as pd
+import numpy as np
 
 def get_expected_shots_info(pga_file, pga_putting_file):
     """Get expected shot info"""
@@ -37,29 +38,32 @@ def expected_shots_on_average(x, lie, expected_shots_dict):
         average_number_of_shots = np.nan
     return average_number_of_shots
 
-def strokes_gained_calculation(start_lie, start_distance, end_lie, end_distance, shot_number, next_shot_number):
+def strokes_gained_calculation(expected_shots_dict, start_lie, start_distance, end_lie, end_distance, shot_number, next_shot_number):
     """Get strokes gained"""
-    start_average_number_of_shots = expected_shots(start_distance, start_lie)
-    end_average_number_of_shots = expected_shots(end_distance, end_lie)
+
+    start_average_number_of_shots = expected_shots_on_average(start_distance, start_lie, expected_shots_dict)
+    end_average_number_of_shots = expected_shots_on_average(end_distance, end_lie, expected_shots_dict)
     if next_shot_number:
         strokes_gained = start_average_number_of_shots - end_average_number_of_shots - 1
     else:
         strokes_gained = (start_average_number_of_shots - end_average_number_of_shots - (next_shot_number - shot_number))
     return strokes_gained
 
-def get_strokes_gained_info(arccos_data):
-    """Add Strokes gained to the dataframe"""  using PGA benchmark.
+def get_strokes_gained_info(arccos_data, pga_file, pga_putting_file):
+    """Add Strokes gained to the dataframe"""
 
-    # Impute next shot number.
+    expected_shots_dict = get_expected_shots_info(pga_file, pga_putting_file)
+
+    # Impute next shot number
     arccos_data.sort_values(by=['round_userId', 'round_startTime', 'roundId', 'hole_holeId', 'shot_shotId'], inplace=True)
-    arccos_data['next_shot_shotId'] = arccos_data.groupby(['round_userId',
-                                                           'round_startTime',
-                                                           'roundId',
-                                                           'hole_holeId'])['shot_shotId'].shift(-1)
+    arccos_data['next_shot_shotId'] = arccos_data.groupby(
+     ['round_userId', 'round_startTime', 'roundId', 'hole_holeId']
+    )['shot_shotId'].shift(-1)
     
     # Calculate strokes gained.
     arccos_data['strokes_gained_calculated'] = arccos_data.apply(
         lambda row: strokes_gained_calculation(
+            expected_shots_dict,
             row['shot_startTerrain'],
             row['shot_start_distance_yards'],
             row['shot_endTerrain'],
