@@ -1,0 +1,8 @@
+pre-commit
+pandas
+numpy
+json
+scipy
+geopy 
+matplotlib
+seaborns
