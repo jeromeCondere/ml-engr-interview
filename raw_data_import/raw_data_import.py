@@ -47,7 +47,7 @@ def get_hole_round_merged_info(round_data, course_data):
 
     # Convert time features to datetime.
     time_features = ["shot_shotTime", "hole_startTime", "hole_endTime", "round_startTime", "round_endTime"]
-    merged_info[time_features] = merged_info[numeric_features].apply(pd.to_datetime, errors="coerce")
+    merged_info[time_features] = merged_info[time_features].apply(pd.to_datetime, errors="coerce")
 
     # Convert features to boolean
     boolean_map = {"T": True, "F": False, 1: True, 0: False, "None": None}
@@ -62,16 +62,17 @@ def get_hole_round_merged_info(round_data, course_data):
     merged_info[boolean_features] = arccos_hole_info[boolean_features].replace(boolean_map)
 
     # Add course name.
-    arccos_course_name = course_data[["name", "courseId"]].drop_duplicates()
+    arccos_course_info = pd.json_normalize(course_data, "courses")
+    arccos_course_name = arccos_course_info[["name", "courseId"]].drop_duplicates()
     merged_info = merged_info.merge(arccos_course_name, how="left", left_on=["round_courseId"], right_on=["courseId"])
 
     return merged_info
 
 
-def get_shot_info_df(shot_data, terrain_data):
+def get_shot_info_df(terrain_data):
     appended_data = []
     for item in terrain_data:
-        key_list = get_key_list(shot_data, ["drive", "approach", "chip", "sand"])
+        key_list = get_key_list(terrain_data, ["drive", "approach", "chip", "sand"])
         drive_data = pd.json_normalize(item["holes"], "drive", key_list, record_prefix="shot_", meta_prefix="hole_")
         approach_data = pd.json_normalize(item["holes"], "approach", key_list, record_prefix="shot_", meta_prefix="hole_")
         chip_data = pd.json_normalize(item["holes"], "chip", key_list, record_prefix="shot_", meta_prefix="hole_")
@@ -83,10 +84,10 @@ def get_shot_info_df(shot_data, terrain_data):
     return pd.concat(appended_data)
 
 
-def convert_raw_data(round_data, course_data, shot_data, terrain_data):
+def convert_raw_data(round_data, course_data, terrain_data):
     """Convert raw data"""
     arccos_hole_info = get_hole_round_merged_info(round_data, course_data)
-    arccos_hole_info_terrain = get_shot_info_df(shot_data, terrain_data)
+    arccos_hole_info_terrain = get_shot_info_df(terrain_data)
     merged_info = arccos_hole_info.merge(
         arccos_hole_info_terrain[
             [
@@ -103,4 +104,5 @@ def convert_raw_data(round_data, course_data, shot_data, terrain_data):
         left_on=["roundId", "hole_holeId", "shot_shotId"],
         right_on=["roundId", "hole_holeId", "shot_shotId"],
     )
+    print("finished raw data conversion")
     return merged_info.copy()

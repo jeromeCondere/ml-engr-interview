@@ -12,7 +12,7 @@ def get_clipped_info(arccos_data, data_mapping_dict_file):
     arccos_data = pd.concat([clippd_data, arccos_data])  # TODO: fix, empty df, add column if exists
     # Tidy datetime features and add round_date.
     datetime_features = ["round_time", "shot_time"]
-    arccos_data[datetime_features] = arccos_data[datetime_features].apply(
+    arccos_data[datetime_features] = arccos_data[datetime_features].applymap(
         lambda x: x.replace(tzinfo=pytz.UTC)
     )
 
@@ -21,7 +21,5 @@ def get_clipped_info(arccos_data, data_mapping_dict_file):
     arccos_data["data_source"] = pd.Categorical(
         arccos_data["data_source"], categories=["arccos", "gsl", "whs"], ordered=True
     )
-    arccos_data.sort_values(
-        by=["data_source", "player_id", "round_time", "round_id", "hole_id"],
-        inplace=True,
-    )
+
+    return arccos_data

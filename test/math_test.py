@@ -1,6 +1,6 @@
-from utils import calculate_miss_distance
-from utils import calculate_start_end_pin_angle
-from utils import get_bearing
+from utils.math_utils import calculate_miss_distance
+from utils.math_utils import calculate_start_end_pin_angle
+from utils.math_utils import get_bearing
 
 
 def test_bearing():
