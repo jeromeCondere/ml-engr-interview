@@ -2,14 +2,14 @@ import pandas as pd
 import pytz
 
 
-def get_clipped_info(arccos_data, data_mapping_dict_file):
+def get_clipped_info(arccos_data, data_mapping_dict):
     """add clippd info to the dataframe"""
 
-    data_dictionary = pd.read_excel(data_mapping_dict_file)
+    data_dictionary = data_mapping_dict
     clippd_data = pd.DataFrame(columns=data_dictionary["Clippd"].values)
 
     # Concatenate data sources.
-    arccos_data = pd.concat([clippd_data, arccos_data])  # TODO: fix, empty df, add column if exists
+    arccos_data = pd.concat([clippd_data, arccos_data])
     # Tidy datetime features and add round_date.
     datetime_features = ["round_time", "shot_time"]
     arccos_data[datetime_features] = arccos_data[datetime_features].applymap(

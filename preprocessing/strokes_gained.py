@@ -1,15 +1,13 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
-from utils.file_utils import read_csv_file
 
-
-def get_expected_shots_info(pga_file, pga_putting_file):
+def get_expected_shots_info(pga, pga_putting):
     """Get expected shot info"""
 
     # Import PGA benchmark.
-    tee_app_arg = read_csv_file(pga_file)
-    put = read_csv_file(pga_putting_file)
+    tee_app_arg = pga
+    put = pga_putting
     put["Distance"] = put["Distance (feet)"] / 3
     expected_shots_dict = {}
 

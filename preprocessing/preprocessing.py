@@ -4,6 +4,7 @@ from shot_miss import get_shot_miss_info
 from shot_type import get_shot_type_info
 from strokes_gained import get_strokes_gained_info
 
+from utils.file_utils import read_csv_file
 from utils.file_utils import read_excel_file
 
 
@@ -20,9 +21,8 @@ def fill_na(arccos_data):
     return arccos_data
 
 
-def mapping(arccos_data, data_mapping_dict_file):
-    data_dictionary = read_excel_file(data_mapping_dict_file)
-    arccos_data_dictionary = data_dictionary[["Clippd", "Arccos"]]
+def mapping(arccos_data, data_mapping_dict):
+    arccos_data_dictionary = data_mapping_dict
     arccos_data_dictionary = (
         arccos_data_dictionary.dropna().set_index("Arccos").to_dict()["Clippd"]
     )
@@ -31,7 +31,7 @@ def mapping(arccos_data, data_mapping_dict_file):
     arccos_data = arccos_data[filtered_columns].copy()
     arccos_data.columns = arccos_data.columns.to_series().map(
         arccos_data_dictionary
-    )  # TODO: fix
+    )
     arccos_data["data_source"] = "arccos"
     return arccos_data
 
@@ -56,13 +56,18 @@ def process_fields(arccos_data, pga_file, pga_putting_file, data_mapping_dict_fi
     arccos_data = get_shot_miss_info(arccos_data)
     print("shot miss info added")
 
+    pga = read_csv_file(pga_file)
+    pga_putting = read_csv_file(pga_putting_file)
+
     arccos_data = get_strokes_gained_info(
-        arccos_data, pga_file, pga_putting_file
+        arccos_data, pga, pga_putting
     )
     print("strokes gained info added")
 
-    arccos_data = mapping(arccos_data, data_mapping_dict_file)
-    arccos_data = get_clipped_info(arccos_data, data_mapping_dict_file)
+    data_mapping_dict = read_excel_file(data_mapping_dict_file)
+    arccos_data = mapping(arccos_data, data_mapping_dict)
+
+    arccos_data = get_clipped_info(arccos_data, data_mapping_dict)
     arccos_data = sort(arccos_data)
 
     return arccos_data

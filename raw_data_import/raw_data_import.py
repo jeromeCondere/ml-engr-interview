@@ -1,9 +1,8 @@
 import pandas as pd
 
 
-# TODO get unit tests for that
 def get_key_list(data, list_items_to_remove):
-    """Get key list from round data without the "shot" key"""
+    """Get key list from data without the key from list_items_to_remove"""
 
     item = data[0]
     key_list = list(item["holes"][0].keys())
@@ -11,7 +10,6 @@ def get_key_list(data, list_items_to_remove):
     return key_list
 
 
-# TODO uses generator
 def get_hole_info_df(round_data):
     """Make a dataframe from hole info in the rounds data"""
 
