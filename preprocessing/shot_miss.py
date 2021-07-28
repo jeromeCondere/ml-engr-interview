@@ -8,29 +8,38 @@ from utils.math_utils import get_bearing
 
 def get_shot_miss_info(arccos_data):
     """add shot miss info to data"""
+    def get_start_to_end_bearing(row):
+        return get_bearing(row["start_coordinates"], row["end_coordinates"])
 
-    arccos_data["start_to_end_bearing"] = arccos_data.apply(
-        lambda row: get_bearing(row["start_coordinates"], row["end_coordinates"]), axis=1)
-    arccos_data["start_to_pin_bearing"] = arccos_data.apply(
-        lambda row: get_bearing(row["start_coordinates"], row["pin_coordinates"]), axis=1)
+    def get_start_to_pin_bearing(row):
+        return get_bearing(row["start_coordinates"], row["pin_coordinates"])
+
+    def get_end_to_pin_bearing(row):
+        return get_bearing(row["end_coordinates"], row["pin_coordinates"])
+
+    def get_start_end_pin_angle(row):
+        return calculate_start_end_pin_angle(
+            row["shot_distance_yards_calculated"],
+            row["shot_start_distance_yards"],
+            row["shot_end_distance_yards"])
+
+    def get_shot_miss_distance(row):
+        return calculate_miss_distance(
+            row["miss_bearing_left_right"],
+            row["start_end_pin_angle"],
+            row["shot_end_distance_yards"])
+
+    arccos_data["start_to_end_bearing"] = arccos_data.apply(get_start_to_end_bearing, axis=1)
+    arccos_data["start_to_pin_bearing"] = arccos_data.apply(get_start_to_pin_bearing, axis=1)
     arccos_data["miss_bearing_left_right"] = arccos_data["start_to_end_bearing"] - arccos_data["start_to_pin_bearing"]
     arccos_data["miss_bearing_left_right"] = np.where(arccos_data["miss_bearing_left_right"] < 0,
                                                       arccos_data["miss_bearing_left_right"] + 360,
                                                       arccos_data["miss_bearing_left_right"])
 
     # Determine miss distances.
-    arccos_data["end_to_pin_bearing"] = arccos_data.apply(
-        lambda row: get_bearing(row["end_coordinates"], row["pin_coordinates"]), axis=1)
-    arccos_data["start_end_pin_angle"] = arccos_data.apply(
-        lambda row: calculate_start_end_pin_angle(row["shot_distance_yards_calculated"],
-                                                  row["shot_start_distance_yards"],
-                                                  row["shot_end_distance_yards"]), axis=1
-    )
-    arccos_data["shot_miss_distance"] = arccos_data.apply(
-        lambda row: calculate_miss_distance(row["miss_bearing_left_right"],
-                                            row["start_end_pin_angle"],
-                                            row["shot_end_distance_yards"]), axis=1
-    )
+    arccos_data["end_to_pin_bearing"] = arccos_data.apply(get_end_to_pin_bearing, axis=1)
+    arccos_data["start_end_pin_angle"] = arccos_data.apply(get_start_end_pin_angle, axis=1)
+    arccos_data["shot_miss_distance"] = arccos_data.apply(get_shot_miss_distance, axis=1)
 
     arccos_data[["shot_miss_distance_left_right",
                  "shot_miss_distance_short_long"]] = pd.DataFrame(arccos_data["shot_miss_distance"].tolist(),

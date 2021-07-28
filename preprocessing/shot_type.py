@@ -5,6 +5,9 @@ from scipy.stats import zscore
 def get_shot_type_info(arccos_data):
     """add shot info to the dataframe"""
 
+    def get_zscore(x):
+        return zscore(x, ddof=1)
+
     # Impute shot type.
     conditions_shot_type = [
         (arccos_data["shot_startTerrain"] == "Tee") & (arccos_data["hole_par"] != 3),
@@ -17,11 +20,11 @@ def get_shot_type_info(arccos_data):
     # Calculate z-scores for shot distance and start distance and by club and shot type.
     arccos_data["shot_distance_yards_zscore"] = (
         arccos_data.groupby(["round_userId", "shot_type", "shot_clubType"])["shot_distance_yards_calculated"]
-        .transform(lambda x: zscore(x, ddof=1))).fillna(0)
+        .transform(get_zscore)).fillna(0)
 
     arccos_data["shot_start_distance_yards_zscore"] = (
         arccos_data.groupby(["round_userId", "shot_type", "shot_clubType"])["shot_start_distance_yards"]
-        .transform(lambda x: zscore(x, ddof=1))).fillna(0)
+        .transform(get_zscore)).fillna(0)
 
     # Impute shot subtype.
     conditions = [

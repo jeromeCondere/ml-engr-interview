@@ -50,11 +50,19 @@ def process_fields(arccos_data, pga_file, pga_putting_file, data_mapping_dict_fi
     ].applymap(lambda s: s.capitalize())
 
     arccos_data = get_shot_distance_coord_info(arccos_data)
+    print("shot distance info added")
+
     arccos_data = get_shot_type_info(arccos_data)
+    print("shot type info added")
+
     arccos_data = get_shot_miss_info(arccos_data)
+    print("shot miss info added")
+
     arccos_data = get_strokes_gained_info(
         arccos_data, pga_file, pga_putting_file
     )
+    print("strokes gained info added")
+
     arccos_data = mapping(arccos_data, data_mapping_dict_file)
     arccos_data = get_clipped_info(arccos_data, data_mapping_dict_file)
     arccos_data = sort(arccos_data)
