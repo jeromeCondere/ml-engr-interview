@@ -16,16 +16,14 @@ def get_shot_type_info(arccos_data):
     ]
     values = ["TeeShot", "GreensideShot", "Putt"]
     arccos_data["shot_type"] = np.select(conditions_shot_type, values, default="ApproachShot")
-
     # Calculate z-scores for shot distance and start distance and by club and shot type.
+    # z-score will give us the shot distance regularity by specific user, shot type, club type
     arccos_data["shot_distance_yards_zscore"] = (
         arccos_data.groupby(["round_userId", "shot_type", "shot_clubType"])["shot_distance_yards_calculated"]
         .transform(get_zscore)).fillna(0)
-
     arccos_data["shot_start_distance_yards_zscore"] = (
         arccos_data.groupby(["round_userId", "shot_type", "shot_clubType"])["shot_start_distance_yards"]
         .transform(get_zscore)).fillna(0)
-
     # Impute shot subtype.
     conditions = [
         arccos_data["shot_type"] == "TeeShot",

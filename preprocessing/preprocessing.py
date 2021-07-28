@@ -8,8 +8,6 @@ from utils.file_utils import read_excel_file
 
 
 def sort(arccos_data):
-    # Add Clippd dataframe to data
-    # Sort.
     arccos_data.sort_values(
         by=["player_id", "round_time", "round_id", "hole_id", "shot_id"], inplace=True
     )
